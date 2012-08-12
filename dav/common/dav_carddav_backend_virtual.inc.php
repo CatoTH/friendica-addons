@@ -163,7 +163,7 @@ abstract class Sabre_CardDAV_Backend_Virtual extends Sabre_CardDAV_Backend_Commo
 			"uri" => $obj["uri"],
 			"lastmodified" => $obj["lastmodified"],
 			"addressbookid" => $addressbookId,
-			"etag" => $obj["etag"],
+			"etag" => '"' . $obj["etag"] . '"',
 			"size" => IntVal($obj["size"]),
 		);
 		return $ret;
@@ -234,14 +234,11 @@ abstract class Sabre_CardDAV_Backend_Virtual extends Sabre_CardDAV_Backend_Commo
 	 */
 	public function updateCard($addressBookId, $cardUri, $cardData)
 	{
-		echo "Die!"; die(); // @TODO
-		$x = explode("-", $addressBookId);
-
 		$etag = md5($cardData);
-		q("UPDATE %s%scards SET carddata = '%s', lastmodified = %d, etag = '%s', size = %d, manually_edited = 1 WHERE uri = '%s' AND namespace = %d AND namespace_id =%d",
-			CALDAV_SQL_DB, CALDAV_SQL_PREFIX, dbesc($cardData), time(), $etag, strlen($cardData), dbesc($cardUri), IntVal($x[10]), IntVal($x[1])
+		q("UPDATE %s%saddressbookobjects SET `carddata` = '%s', `lastmodified` = NOW(), `etag` = '%s', size = %d WHERE uri = '%s' AND `addressbook_id` = %d",
+			CALDAV_SQL_DB, CALDAV_SQL_PREFIX, dbesc($cardData), $etag, strlen($cardData), dbesc($cardUri), IntVal($addressBookId)
 		);
-		q('UPDATE %s%saddressbooks_community SET ctag = ctag + 1 WHERE uid = %d', CALDAV_SQL_DB, CALDAV_SQL_PREFIX, IntVal($x[1]));
+		q('UPDATE %s%saddressbooks SET `ctag` = `ctag` + 1 WHERE `id` = %d', CALDAV_SQL_DB, CALDAV_SQL_PREFIX, IntVal($addressBookId));
 
 		return '"' . $etag . '"';
 	}
