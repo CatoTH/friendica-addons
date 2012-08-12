@@ -45,6 +45,7 @@ function dav_include_files()
 	require_once (__DIR__ . "/../sabre-vobject/lib/Sabre/VObject/Property/MultiDateTime.php");
 	require_once (__DIR__ . "/../sabre-vobject/lib/Sabre/VObject/Component/VAlarm.php");
 	require_once (__DIR__ . "/../sabre-vobject/lib/Sabre/VObject/Component/VCalendar.php");
+	require_once (__DIR__ . "/../sabre-vobject/lib/Sabre/VObject/Component/VCard.php");
 	require_once (__DIR__ . "/../sabre-vobject/lib/Sabre/VObject/Component/VEvent.php");
 	require_once (__DIR__ . "/../sabre-vobject/lib/Sabre/VObject/Component/VJournal.php");
 	require_once (__DIR__ . "/../sabre-vobject/lib/Sabre/VObject/Component/VTodo.php");
