@@ -108,6 +108,7 @@ class vcard_source_data
 function vcard_source_compile($vcardsource)
 {
 	$str = "BEGIN:VCARD\r\nVERSION:3.0\r\nPRODID:-//Friendica//DAV-Plugin//EN\r\n";
+	$str .= "UID:" . Sabre_DAV_UUIDUtil::getUUID() . "\r\n";
 	$str .= "N:" . str_replace(";", ",", $vcardsource->name_last) . ";" . str_replace(";", ",", $vcardsource->name_first) . ";" . str_replace(";", ",", $vcardsource->name_middle) . ";;\r\n";
 	$str .= "FN:" . str_replace(";", ",", $vcardsource->name_first) . " " . str_replace(";", ",", $vcardsource->name_middle) . " " . str_replace(";", ",", $vcardsource->name_last) . "\r\n";
 	$str .= "REV:" . str_replace(" ", "T", $vcardsource->last_update) . "Z\r\n";

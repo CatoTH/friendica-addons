@@ -256,7 +256,7 @@ abstract class Sabre_CardDAV_Backend_Virtual extends Sabre_CardDAV_Backend_Commo
 	 */
 	public function deleteCard($addressBookId, $cardUri)
 	{
-		q("UPDATE %s%scards SET `manually_deleted` = 1 WHERE `addressbook_id` = %d AND `uri` = '%s'", CALDAV_SQL_DB, CALDAV_SQL_PREFIX, IntVal($addressBookId), dbesc($cardUri));
+		q("UPDATE %s%saddressbookobjects SET `manually_deleted` = 1 WHERE `addressbook_id` = %d AND `uri` = '%s'", CALDAV_SQL_DB, CALDAV_SQL_PREFIX, IntVal($addressBookId), dbesc($cardUri));
 		q('UPDATE %s%saddressbooks SET ctag = ctag + 1 WHERE `id` = %d', CALDAV_SQL_DB, CALDAV_SQL_PREFIX, IntVal($addressBookId));
 
 		return true;
