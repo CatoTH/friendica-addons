@@ -82,6 +82,33 @@ function dav_compat_get_curr_user_id()
 }
 
 
+
+/**
+ * @return string
+ */
+function dav_compat_get_curr_username()
+{
+	$a = get_app();
+	return IntVal($a->user["nickname"]);
+}
+
+/**
+ * @return string
+ */
+function dav_compat_get_curr_email()
+{
+	return $a->user["email"];
+}
+
+/**
+ * @return wdcal_local
+ */
+function dav_compat_get_current_user_localization() {
+	$a            = get_app();
+	return wdcal_local::getInstanceByUser($a->user["uid"]);
+}
+
+
 /**
  * @param string $principalUri
  * @return int|null

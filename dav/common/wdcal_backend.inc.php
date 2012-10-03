@@ -40,11 +40,8 @@ function wdcal_get_list_range_params($day, $weekstartday, $num_days, $type)
 			$et = mktime(0, 0, -1, date("m", $phpTime), $monday + 7, date("Y", $phpTime));
 			break;
 		case "multi_days":
-			//suppose first day of a week is monday
-			$monday = date("d", $phpTime) - date('N', $phpTime) + $weekstartday;
-			//echo date('N', $phpTime);
-			$st = mktime(0, 0, 0, date("m", $phpTime), $monday, date("Y", $phpTime));
-			$et = mktime(0, 0, -1, date("m", $phpTime), $monday + $num_days, date("Y", $phpTime));
+			$st = mktime(0, 0, 0, date("m", $phpTime), date("d", $phpTime), date("Y", $phpTime));
+			$et = mktime(0, 0, -1, date("m", $phpTime), date("d", $phpTime) + $num_days, date("Y", $phpTime));
 			break;
 		case "day":
 			$st = mktime(0, 0, 0, date("m", $phpTime), date("d", $phpTime), date("Y", $phpTime));

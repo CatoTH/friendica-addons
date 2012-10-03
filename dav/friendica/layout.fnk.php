@@ -328,7 +328,7 @@ function wdcal_getEditPage($calendar_id, $uri)
 	$a            = get_app();
 	$localization = wdcal_local::getInstanceByUser($a->user["uid"]);
 
-	return wdcal_getEditPage_str($localization, $a->get_baseurl(), $calendar_id, $uri);
+	return wdcal_getEditPage_str($a->get_baseurl() . "/dav/wdcal/", $calendar_id, $uri);
 }
 
 /**
@@ -336,10 +336,7 @@ function wdcal_getEditPage($calendar_id, $uri)
  */
 function wdcal_getNewPage()
 {
-	$a            = get_app();
-	$localization = wdcal_local::getInstanceByUser($a->user["uid"]);
-
-	return wdcal_getEditPage_str($localization, $a->get_baseurl(), 0, 0);
+	return wdcal_getEditPage_str($a->get_baseurl() . "/dav/wdcal/", 0, 0);
 }
 
 

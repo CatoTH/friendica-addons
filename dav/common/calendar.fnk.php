@@ -160,7 +160,8 @@ function wdcal_php2MySqlTime($phpDate)
  */
 function wdcal_mySql2PhpTime($sqlDate)
 {
-	$ts = DateTime::createFromFormat("Y-m-d H:i:s", $sqlDate);
+	if (strlen($sqlDate) == 10) $ts = DateTime::createFromFormat("Y-m-d", $sqlDate);
+	else $ts = DateTime::createFromFormat("Y-m-d H:i:s", $sqlDate);
 	return $ts->format("U");
 }
 
@@ -187,7 +188,7 @@ function wdcal_mySql2icalTime($myqlDate)
  */
 function icalendar_sanitize_string($str = "")
 {
-	return preg_replace("/[\\r\\n]+/siu", "\r\n", $str);
+	return preg_replace("/[\\r\\n]+/siu", "\n", $str);
 }
 
 
@@ -259,7 +260,9 @@ function dav_create_server($force_authentication = false, $needs_caldav = true, 
 		$server->addPlugin($aclPlugin);
 	}
 
-	if ($force_authentication) $server->broadcastEvent('beforeMethod', array("GET", "/")); // Make it authenticate
+	if ($force_authentication) {
+		$server->broadcastEvent('beforeMethod', array("GET", "/"));
+	} // Make it authenticate
 
 	return $server;
 }
@@ -274,8 +277,7 @@ function dav_get_current_user_calendars(&$server, $with_privilege = "")
 {
 	if ($with_privilege == "") $with_privilege = DAV_ACL_READ;
 
-	$a             = get_app();
-	$calendar_path = "/calendars/" . strtolower($a->user["nickname"]) . "/";
+	$calendar_path = "/calendars/" . dav_compat_get_curr_username() . "/";
 
 	/** @var Sabre_CalDAV_AnimexxUserCalendars $tree  */
 	$tree = $server->tree->getNodeForPath($calendar_path);
@@ -310,8 +312,7 @@ function dav_get_current_user_calendarobject(&$server, &$calendar, $calendarobje
 
 	if ($with_privilege == "") $with_privilege = DAV_ACL_READ;
 
-	$a   = get_app();
-	$uri = "/calendars/" . strtolower($a->user["nickname"]) . "/" . $calendar->getName() . "/" . $calendarobject_uri;
+	$uri = "/calendars/" . strtolower(dav_compat_get_curr_username()) . "/" . $calendar->getName() . "/" . $calendarobject_uri;
 
 	/** @var Sabre_DAVACL_Plugin $aclplugin  */
 	$aclplugin = $server->getPlugin("acl");

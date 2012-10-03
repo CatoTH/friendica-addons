@@ -248,7 +248,7 @@ class Sabre_CardDAV_Backend_Std extends Sabre_CardDAV_Backend_Common
 	public function updateCard($addressBookId, $cardUri, $cardData)
 	{
 		$etag = md5($cardData);
-		q("UPDATE %s%saddressbookobjects SET `carddata` = '%s', `lastmodified` = NOW(), `etag` = '%s', `size` = %d, `manually_edited` = 1 WHERE `uri` = '%s' AND `addressbook_id` = %d",
+		q("UPDATE %s%saddressbookobjects SET `carddata` = '%s', `lastmodified` = NOW(), `etag` = '%s', `size` = %d WHERE `uri` = '%s' AND `addressbook_id` = %d",
 			CALDAV_SQL_DB, CALDAV_SQL_PREFIX, dbesc($cardData), dbesc($etag), strlen($cardData), dbesc($cardUri), IntVal($addressBookId)
 		);
 

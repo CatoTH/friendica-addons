@@ -114,7 +114,26 @@ abstract class Sabre_CardDAV_Backend_Virtual extends Sabre_CardDAV_Backend_Commo
 		}
 	}
 
-
+	/**
+	 * Adds a property, if no property of this kind with the same value exists.
+	 *
+	 * @static
+	 * @param Sabre\VObject\Component $component
+	 * @param string $prop_name
+	 * @param string $prop_value
+	 * @param array $parameters
+	 */
+	static public function card_add_automatic_multi_value(&$component, $prop_name, $prop_value, $parameters = array()) {
+		$curr = $component->select($prop_name);
+		$found = false;
+		/** @var Sabre\VObject\Property $val */
+		foreach ($curr as $key=>$val) if ($val->value == $prop_value) $found = true;
+		if (!$found) {
+			$prop = new Sabre\VObject\Property($prop_name, $prop_value);
+			foreach ($parameters as $key=>$val) $prop->add($key, $val);
+			$component->children[] = $prop;
+		}
+	}
 
 	/**
 	 * Deletes the x-prop_name value. Deletes the prop_name value IF the old value is the same as the old value of x-prop_name (meaning: the user has not manually changed it)

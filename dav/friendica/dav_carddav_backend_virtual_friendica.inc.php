@@ -198,7 +198,7 @@ class Sabre_CardDAV_Backend_Friendica extends Sabre_CardDAV_Backend_Virtual
 		$x = explode("-", $addressBookId);
 
 		$etag = md5($cardData);
-		q("UPDATE %s%scards SET carddata = '%s', lastmodified = %d, etag = '%s', size = %d, manually_edited = 1 WHERE uri = '%s' AND namespace = %d AND namespace_id =%d",
+		q("UPDATE %s%scards SET carddata = '%s', lastmodified = %d, etag = '%s', size = %d WHERE uri = '%s' AND namespace = %d AND namespace_id =%d",
 			CALDAV_SQL_DB, CALDAV_SQL_PREFIX, dbesc($cardData), time(), $etag, strlen($cardData), dbesc($cardUri), IntVal($x[10]), IntVal($x[1])
 		);
 		q('UPDATE %s%saddressbooks_community SET ctag = ctag + 1 WHERE uid = %d', CALDAV_SQL_DB, CALDAV_SQL_PREFIX, IntVal($x[1]));

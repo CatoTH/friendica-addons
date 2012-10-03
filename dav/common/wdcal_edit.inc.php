@@ -1,15 +1,16 @@
 <?php
 
 /**
- * @param wdcal_local $localization
  * @param string $baseurl
  * @param int $calendar_id
  * @param int $uri
+ * @param bool $nobacklink
  * @return string
  */
-function wdcal_getEditPage_str(&$localization, $baseurl, $calendar_id, $uri)
+function wdcal_getEditPage_str($baseurl, $calendar_id, $uri, $nobacklink = false)
 {
 	$server = dav_create_server(true, true, false);
+	$localization = dav_compat_get_current_user_localization();
 
 	if ($uri > 0) {
 		$calendar = dav_get_current_user_calendar_by_id($server, $calendar_id, DAV_ACL_WRITE);
@@ -54,7 +55,7 @@ function wdcal_getEditPage_str(&$localization, $baseurl, $calendar_id, $uri)
 		$notifications = array();
 		$alarms = $component->select("VALARM");
 		foreach ($alarms as $alarm)  {
-			/** @var Sabre_VObject_Component_VAlarm $alarm */
+			/** @var Sabre\VObject\Component\VAlarm $alarm */
 			$action = $alarm->__get("ACTION")->value;
 			$trigger = $alarm->__get("TRIGGER");
 
@@ -64,7 +65,7 @@ function wdcal_getEditPage_str(&$localization, $baseurl, $calendar_id, $uri)
 			}
 
 			/** @var DateInterval $triggerDuration  */
-			$triggerDuration = Sabre_VObject_DateTimeParser::parseDuration($trigger);
+			$triggerDuration = Sabre\VObject\DateTimeParser::parseDuration($trigger);
 			$unit = "hour";
 			$value = 1;
 			if ($triggerDuration->s > 0) {
@@ -92,7 +93,7 @@ function wdcal_getEditPage_str(&$localization, $baseurl, $calendar_id, $uri)
 			);
 		}
 
-		if ($component->select("RRULE")) $recurrence = new Sabre_VObject_RecurrenceIterator($vObject, (string)$component->__get("UID"));
+		if ($component->select("RRULE")) $recurrence = new Sabre\VObject\RecurrenceIterator($vObject, (string)$component->__get("UID"));
 		else $recurrence = null;
 
 	} elseif (isset($_REQUEST["start"]) && $_REQUEST["start"] > 0) {
@@ -135,10 +136,12 @@ function wdcal_getEditPage_str(&$localization, $baseurl, $calendar_id, $uri)
 		$recurrentce_exdates = array();
 	}
 
-	$postto = $baseurl . "/dav/wdcal/" . ($uri == 0 ? "new/" : $calendar_id . "/" . $uri . "/edit/");
+	$postto = $baseurl . ($uri == 0 ? "new/" : $calendar_id . "/" . $uri . "/edit/");
 
-	$out = "<a href='" . $baseurl . "/dav/wdcal/'>" . t("Go back to the calendar") . "</a><br><br>";
-	$out .= "<form method='POST' action='$postto'>
+	$out = "";
+
+	if (!$nobacklink) $out .= "<a href='" . $baseurl . "/dav/wdcal/'>" . t("Go back to the calendar") . "</a>";
+	$out .= "<br><br><form method='POST' action='$postto'>
 		<input type='hidden' name='form_security_token' value='" . get_form_security_token('caledit') . "'>\n";
 
 	$out .= "<h2>" . t("Event data") . "</h2>";
@@ -448,6 +451,8 @@ function wdcal_getEditPage_str(&$localization, $baseurl, $calendar_id, $uri)
 
 	$out .= "<h2>" . t("Notification") . "</h2>";
 
+	debug_vardump($notifications);
+
 	if (!$notifications) $notifications = array();
 	$notifications["new"] = array(
 		"action" => "email",
@@ -461,7 +466,7 @@ function wdcal_getEditPage_str(&$localization, $baseurl, $calendar_id, $uri)
 		$unparsable = false;
 		if (!in_array($noti["action"], array("email", "display"))) $unparsable = true;
 
-		$out .= "<div class='noti_holder' ";
+		$out .= "<div class='wdcal_noti_holder' ";
 		if (!is_numeric($index) && $index == "new") $out .= "style='display: none;' id='noti_new_row'";
 		$out .= "><label class='block' for='noti_type_" . $index . "'>" . t("Notify by") . ":</label>";
 		$out .= "<select name='noti_type[$index]' size='1' id='noti_type_" . $index . "'>";
@@ -492,7 +497,7 @@ function wdcal_getEditPage_str(&$localization, $baseurl, $calendar_id, $uri)
 	$out .= "<input type='hidden' name='new_alarm' id='new_alarm' value='0'><div id='new_alarm_adder'><a href='#'>" . t("Add a notification") . "</a></div>";
 
 	$out .= "<script>\$(function() {
-		wdcal_edit_init('" . $localization->dateformat_datepicker_js() . "', '${baseurl}/dav/');
+		wdcal_edit_init('" . $localization->dateformat_datepicker_js() . "', '${baseurl}');
 	});</script>";
 
 	$out .= "<br><input type='submit' name='save' value='Save'></form>";
@@ -502,7 +507,7 @@ function wdcal_getEditPage_str(&$localization, $baseurl, $calendar_id, $uri)
 
 
 /**
- * @param Sabre_VObject_Component_VEvent $component
+ * @param Sabre\VObject\Component\VEvent $component
  * @param wdcal_local $localization
  * @return int
  */
@@ -531,7 +536,7 @@ function wdcal_set_component_date(&$component, &$localization)
 }
 
 /**
- * @param Sabre_VObject_Component_VEvent $component
+ * @param Sabre\VObject\Component\VEvent $component
  * @param string $str
  * @return string
  */
@@ -580,7 +585,7 @@ function wdcal_set_component_recurrence_special(&$component, $str) {
 }
 
 /**
- * @param Sabre_VObject_Component_VEvent $component
+ * @param Sabre\VObject\Component\VEvent $component
  * @param wdcal_local $localization
  */
 function wdcal_set_component_recurrence(&$component, &$localization)
@@ -665,8 +670,6 @@ function wdcal_set_component_recurrence(&$component, &$localization)
 	 */
 function wdcal_set_component_alerts(&$component, &$localization, $summary, $dtstart)
 {
-	$a = get_app();
-
 	$prev_alarms = $component->select("VALARM");
 	$component->__unset("VALARM");
 
@@ -689,7 +692,7 @@ function wdcal_set_component_alerts(&$component, &$localization, $summary, $dtst
 				$alarm->add(new Sabre\VObject\Property("ACTION", "EMAIL"));
 				$alarm->add(new Sabre\VObject\Property("SUMMARY", $summary));
 				$alarm->add(new Sabre\VObject\Property("DESCRIPTION", $mailtext));
-				$alarm->add(new Sabre\VObject\Property("ATTENDEE", "MAILTO:" . $a->user["email"]));
+				$alarm->add(new Sabre\VObject\Property("ATTENDEE", "MAILTO:" . dav_compat_get_curr_email()));
 				break;
 			case "display":
 				$alarm->add(new Sabre\VObject\Property("ACTION", "DISPLAY"));
@@ -777,8 +780,7 @@ function wdcal_getEditPage_exception_selector()
 {
 	header("Content-type: application/json");
 
-	$a            = get_app();
-	$localization = wdcal_local::getInstanceByUser($a->user["uid"]);
+	$localization = dav_compat_get_current_user_localization();
 
 	$vObject = dav_create_empty_vevent();
 
