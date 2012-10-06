@@ -57,6 +57,10 @@ function wdcal_print_user_ics($calendar_id)
 			preg_match("/BEGIN:VEVENT(.*)END:VEVENT/siu", $obj["calendardata"], $matches);
 			$str2 = preg_replace("/([^\\r])\\n/siu", "\\1\r\n", $matches[0]);
 			$str2 = preg_replace("/MAILTO:.*[^:a-z0-9_\+äöüß\\n\\n@-]+.*(:|\\r\\n[^ ])/siU", "\\1", $str2);
+			$str2 = preg_replace_callback("/LOCATION:(.*)\\n[^ ]/siuU", function ($match) {
+				return str_replace(array(",", ";"), array("\,", "\;"), $match[0]);
+			}, $str2);
+
 			$str .= $str2 . "\r\n";
 		}
 	}

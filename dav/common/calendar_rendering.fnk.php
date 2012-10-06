@@ -79,10 +79,10 @@ function renderCalDavEntry_data(&$calendar, &$calendarobject)
 	if ($componentType !== 'VEVENT') return;
 
 	$event = array(
-		"description" => ($component->__get("DESCRIPTION") ? $component->__get("DESCRIPTION")->value : null),
-		"summary"     => ($component->__get("SUMMARY") ? $component->__get("SUMMARY")->value : null),
-		"location"    => ($component->__get("LOCATION") ? $component->__get("LOCATION")->value : null),
-		"color"       => ($component->__get("X-ANIMEXX-COLOR") ? $component->__get("X-ANIMEXX-COLOR")->value : null),
+		"description" => ($component->__get("DESCRIPTION") ? dav_unescape($component->__get("DESCRIPTION")->value) : null),
+		"summary"     => ($component->__get("SUMMARY") ? dav_unescape($component->__get("SUMMARY")->value) : null),
+		"location"    => ($component->__get("LOCATION") ? dav_unescape($component->__get("LOCATION")->value) : null),
+		"color"       => ($component->__get("X-ANIMEXX-COLOR") ? dav_unescape($component->__get("X-ANIMEXX-COLOR")->value) : null),
 	);
 
 	$recurring = ($component->__get("RRULE") ? 1 : 0);

@@ -34,13 +34,13 @@ function wdcal_getEditPage_str($baseurl, $calendar_id, $uri, $nobacklink = false
 		$dtstart = $component->__get("DTSTART");
 		$event   = array(
 			"id"            => IntVal($uri),
-			"Summary"       => ($component->__get("SUMMARY") ? $component->__get("SUMMARY")->value : null),
+			"Summary"       => ($component->__get("SUMMARY") ? dav_unescape($component->__get("SUMMARY")->value) : null),
 			"StartTime"     => $dtstart->getDateTime()->getTimeStamp(),
 			"EndTime"       => Sabre_CalDAV_Backend_Common::getDtEndTimeStamp($component),
 			"IsAllDayEvent" => (strlen($dtstart->value) == 8),
-			"Description"   => ($component->__get("DESCRIPTION") ? $component->__get("DESCRIPTION")->value : null),
-			"Location"      => ($component->__get("LOCATION") ? $component->__get("LOCATION")->value : null),
-			"Color"         => ($component->__get("X-ANIMEXX-COLOR") ? $component->__get("X-ANIMEXX-COLOR")->value : null),
+			"Description"   => ($component->__get("DESCRIPTION") ? dav_unescape($component->__get("DESCRIPTION")->value) : null),
+			"Location"      => ($component->__get("LOCATION") ? dav_unescape($component->__get("LOCATION")->value) : null),
+			"Color"         => ($component->__get("X-ANIMEXX-COLOR") ? dav_unescape($component->__get("X-ANIMEXX-COLOR")->value) : null),
 		);
 
 		$exdates             = $component->select("EXDATE");
@@ -451,8 +451,6 @@ function wdcal_getEditPage_str($baseurl, $calendar_id, $uri, $nobacklink = false
 
 	$out .= "<h2>" . t("Notification") . "</h2>";
 
-	debug_vardump($notifications);
-
 	if (!$notifications) $notifications = array();
 	$notifications["new"] = array(
 		"action" => "email",
@@ -725,8 +723,7 @@ function wdcal_set_component_alerts(&$component, &$localization, $summary, $dtst
  */
 function wdcal_postEditPage($uri, $uid = 0, $timezone = "", $goaway_url = "")
 {
-	$uid          = IntVal($uid);
-	$localization = wdcal_local::getInstanceByUser($uid);
+	$localization = dav_compat_get_current_user_localization();
 
 	$server = dav_create_server(true, true, false);
 
@@ -769,7 +766,7 @@ function wdcal_postEditPage($uri, $uid = 0, $timezone = "", $goaway_url = "")
 		$obj = $calendar->getChild($obj_uri);
 		$obj->put($data);
 	}
-	return array("ok" => false, "msg" => t("Saved"));
+	return array("ok" => true, "msg" => t("Saved"));
 }
 
 

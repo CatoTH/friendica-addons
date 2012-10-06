@@ -188,9 +188,19 @@ function wdcal_mySql2icalTime($myqlDate)
  */
 function icalendar_sanitize_string($str = "")
 {
-	return preg_replace("/[\\r\\n]+/siu", "\n", $str);
+	$str = preg_replace("/[\\r\\n]+/siu", "\n", $str);
+	return $str;
 }
 
+/**
+ * @param string $str
+ * @return string
+ */
+function dav_unescape($str = "") {
+	$str = preg_replace("/\\\\/s", "\\", $str);
+	$str = str_replace(array("\\;", "\\,"), array(";", ","), $str);
+	return $str;
+}
 
 /**
  * @return Sabre_CalDAV_AnimexxCalendarRootNode
