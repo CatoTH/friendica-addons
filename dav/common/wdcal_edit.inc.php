@@ -1,5 +1,52 @@
 <?php
 
+
+/**
+ * @param array|Sabre_CalDAV_Calendar[] $calendars
+ * @param array $event
+ * @param int $calendar_id
+ * @return string
+ */
+function wdcal_getEditPage_calselect_str(&$calendars, $event, $calendar_id) {
+	$out = "";
+
+	$freigaben = datenfreigaben_load($_SESSION["user_id"], array(DATEN_DOMAIN_KALENDER_DETAIL, DATEN_DOMAIN_KALENDER_FREEBUSY));
+	$farben = array();
+
+	$cal_col = "";
+	$out .= "<label for='calendar' class='block'>" . t("Calendar") . ":</label><select id='calendar' name='calendar' size='1'>";
+	foreach ($calendars as $cal) {
+		$prop = $cal->getProperties(array("id", DAV_DISPLAYNAME, DAV_CALENDARCOLOR));
+		$out .= "<option value='" . $prop["id"] . "' ";
+		if ($prop["id"] == $calendar_id) {
+			$out .= "selected";
+			$cal_col = $prop[DAV_CALENDARCOLOR];
+			$farben[$prop["id"]] = $cal_col;
+		}
+		$out .= ">" . escape_tags($prop[DAV_DISPLAYNAME]) . "</option>\n";
+	}
+	if ($cal_col == "") $cal_col = "C3C3FF";
+
+	$out .= "</select><br>\n";
+	$out .= "<label class='block'>Farbe:</label>";
+	$out .= "<label><input type='radio' name='color_mode' value='calendar' ";
+	if (is_null($event["Color"])) $out .= "checked";
+	$out .= "> ";
+	foreach ($calendars as $cal) {
+		$prop = $cal->getProperties(array(DAV_CALENDARCOLOR));
+		$color = $prop[DAV_CALENDARCOLOR];
+		$out .= "<span style='display: inline-block; width: 14px; height: 14px; background-color: #${color};' class='kalender_specific kalender_specific_" . $calendar_id . "'></span>";
+	}
+	$out .= " Kalender</label> &nbsp; &nbsp; <label><input type='radio' name='color_mode' value='event' ";
+	if (!is_null($event["Color"])) $out .= "checked";
+	$out .= "><span id='cal_color_holder' ";
+	$out .= "><input name='color' id='cal_color' value='" . (is_null($event["Color"]) ? "#" . $cal_col : escape_tags($event["Color"])) . "'></span> ";
+	$out .= t("Special color") . "</label><br>\n";
+
+	return $out;
+}
+
+
 /**
  * @param string $baseurl
  * @param int $calendar_id
@@ -146,28 +193,7 @@ function wdcal_getEditPage_str($baseurl, $calendar_id, $uri, $nobacklink = false
 
 	$out .= "<h2>" . t("Event data") . "</h2>";
 
-	$out .= "<label for='calendar' class='block'>" . t("Calendar") . ":</label><select id='calendar' name='calendar' size='1'>";
-	$found   = false;
-	$cal_col = "aaaaaa";
-	foreach ($calendars as $cal) {
-		$prop = $cal->getProperties(array("id", DAV_DISPLAYNAME, DAV_CALENDARCOLOR));
-		$out .= "<option value='" . $prop["id"] . "' ";
-		if ($prop["id"] == $calendar_id) {
-			$out .= "selected";
-			$cal_col = $prop[DAV_CALENDARCOLOR];
-			$found   = true;
-		} elseif (!$found) $cal_col = $prop[DAV_CALENDARCOLOR];
-		$out .= ">" . escape_tags($prop[DAV_DISPLAYNAME]) . "</option>\n";
-	}
-
-	$out .= "</select>";
-	$out .= "&nbsp; &nbsp; <label class='plain'><input type='checkbox' name='color_override' id='color_override' ";
-	if (!is_null($event["Color"])) $out .= "checked";
-	$out .= "> " . t("Special color") . ":</label>";
-	$out .= "<span id='cal_color_holder' ";
-	if (is_null($event["Color"])) $out .= "style='display: none;'";
-	$out .= "><input name='color' id='cal_color' value='" . (is_null($event["Color"]) ? "#" . $cal_col : escape_tags($event["Color"])) . "'></span>";
-	$out .= "<br>\n";
+	$out .= wdcal_getEditPage_calselect_str($calendars, $event, $calendar_id);
 
 	$out .= "<label class='block' for='cal_summary'>" . t("Subject") . ":</label>
 		<input name='summary' id='cal_summary' value=\"" . escape_tags($event["Summary"]) . "\"><br>\n";

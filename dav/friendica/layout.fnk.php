@@ -160,6 +160,44 @@ function wdcal_import_user_ics($calendar_id) {
 }
 
 
+
+/**
+ * @param array|Sabre_CalDAV_Calendar[] $calendars
+ * @param array $event
+ * @param int $calendar_id
+ * @return string
+ */
+function wdcal_getEditPage_calselect_str(&$calendars, $event, $calendar_id) {
+	$out = "";
+
+	$out .= "<label for='calendar' class='block'>" . t("Calendar") . ":</label><select id='calendar' name='calendar' size='1'>";
+	$found   = false;
+	$cal_col = "aaaaaa";
+	foreach ($calendars as $cal) {
+		$prop = $cal->getProperties(array("id", DAV_DISPLAYNAME, DAV_CALENDARCOLOR));
+		$out .= "<option value='" . $prop["id"] . "' ";
+		if ($prop["id"] == $calendar_id) {
+			$out .= "selected";
+			$cal_col = $prop[DAV_CALENDARCOLOR];
+			$found   = true;
+		} elseif (!$found) $cal_col = $prop[DAV_CALENDARCOLOR];
+		$out .= ">" . escape_tags($prop[DAV_DISPLAYNAME]) . "</option>\n";
+	}
+
+	$out .= "</select>";
+	$out .= "&nbsp; &nbsp; <label class='plain'><input type='checkbox' name='color_override' id='color_override' ";
+	if (!is_null($event["Color"])) $out .= "checked";
+	$out .= "> " . t("Special color") . ":</label>";
+	$out .= "<span id='cal_color_holder' ";
+	if (is_null($event["Color"])) $out .= "style='display: none;'";
+	$out .= "><input name='color' id='cal_color' value='" . (is_null($event["Color"]) ? "#" . $cal_col : escape_tags($event["Color"])) . "'></span>";
+	$out .= "<br>\n";
+
+	return $out;
+}
+
+
+
 /**
  * @param array|Sabre_CalDAV_Calendar[] $calendars
  * @param array|int[] $calendars_selected
@@ -211,9 +249,7 @@ function wdcal_printCalendar($calendars, $calendars_selected, $data_feed_url, $v
 	foreach ($calendars as $cal) {
 		$cal_id = $cal->getProperties(array("id", DAV_DISPLAYNAME));
 		$x .= '<label style="margin-left: 10px; margin-right: 10px;"><input type="checkbox" name="cals[]" value="' . $cal_id["id"] . '"';
-		$found = false;
-		foreach ($calendars_selected as $pre) if ($pre["id"] == $cal_id["id"]) $found = true;
-		if ($found) $x .= ' checked';
+		if (in_array($cal_id["id"], $calendars_selected)) $x .= ' checked';
 		$x .= '> ' . escape_tags($cal_id[DAV_DISPLAYNAME]) . '</label> ';
 	}
 
@@ -376,14 +412,14 @@ function wdcal_getSettingsPage(&$a)
 				if ($_REQUEST["name"][$cal["id"]] != $cal["displayname"]) $change_sql .= ", `displayname` = '" . dbesc($_REQUEST["name"][$cal["id"]]) . "'";
 			}
 			if ($change_sql != "") {
-				q("UPDATE %s%scalendars SET `ctag` = `ctag` + 1 $change_sql WHERE `id` = %d AND `namespace_id` = %d AND `namespace_id` = %d",
+				q("UPDATE %s%scalendars SET `ctag` = `ctag` + 1 $change_sql WHERE `id` = %d AND `namespace` = %d AND `namespace_id` = %d",
 					CALDAV_SQL_DB, CALDAV_SQL_PREFIX, $cal["id"], CALDAV_NAMESPACE_PRIVATE, IntVal($a->user["uid"]));
 				info(t('The calendar has been updated.'));
 			}
 		}
 
 		if (isset($_REQUEST["uri"]["new"]) && $_REQUEST["uri"]["new"] != "" && $_REQUEST["name"]["new"] && $_REQUEST["name"]["new"] != "") {
-			$order = q("SELECT MAX(`calendarorder`) ord FROM %s%scalendars WHERE `namespace_id` = %d AND `namespace_id` = %d",
+			$order = q("SELECT MAX(`calendarorder`) ord FROM %s%scalendars WHERE `namespace` = %d AND `namespace_id` = %d",
 				CALDAV_SQL_DB, CALDAV_SQL_PREFIX, CALDAV_NAMESPACE_PRIVATE, IntVal($a->user["uid"]));
 			$neworder = $order[0]["ord"] + 1;
 			q("INSERT INTO %s%scalendars (`namespace`, `namespace_id`, `calendarorder`, `calendarcolor`, `displayname`, `timezone`, `uri`, `has_vevent`, `ctag`)
@@ -398,13 +434,13 @@ function wdcal_getSettingsPage(&$a)
 	if (isset($_REQUEST["remove_cal"])) {
 		check_form_security_token_redirectOnErr('/dav/settings/', 'del_cal', 't');
 
-		$c = q("SELECT * FROM %s%scalendars WHERE `id` = %d AND `namespace_id` = %d AND `namespace_id` = %d",
+		$c = q("SELECT * FROM %s%scalendars WHERE `id` = %d AND `namespace` = %d AND `namespace_id` = %d",
 			CALDAV_SQL_DB, CALDAV_SQL_PREFIX, IntVal($_REQUEST["remove_cal"]), CALDAV_NAMESPACE_PRIVATE, IntVal($a->user["uid"]));
 		if (count($c) != 1) killme();
 
 		$calobjs = q("SELECT `id` FROM %s%scalendarobjects WHERE `calendar_id` = %d", CALDAV_SQL_DB, CALDAV_SQL_PREFIX, IntVal($_REQUEST["remove_cal"]));
 
-		$newcal = q("SELECT * FROM %s%scalendars WHERE `id` != %d AND `namespace_id` = %d AND `namespace_id` = %d ORDER BY `calendarcolor` LIMIT 0,1",
+		$newcal = q("SELECT * FROM %s%scalendars WHERE `id` != %d AND `namespace` = %d AND `namespace_id` = %d ORDER BY `calendarcolor` LIMIT 0,1",
 			CALDAV_SQL_DB, CALDAV_SQL_PREFIX, IntVal($_REQUEST["remove_cal"]), CALDAV_NAMESPACE_PRIVATE, IntVal($a->user["uid"]));
 		if (count($newcal) != 1) killme();
 
